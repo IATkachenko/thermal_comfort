@@ -10,8 +10,8 @@ from custom_components.thermal_comfort.sensor import SensorType
 
 USER_INPUT = {
     CONF_NAME: "test_thermal_comfort",
-    CONF_TEMPERATURE_SENSOR: "test_temperature_sensor",
-    CONF_HUMIDITY_SENSOR: "test_humidity_sensor",
+    CONF_TEMPERATURE_SENSOR: "sensor.test_temperature_sensor",
+    CONF_HUMIDITY_SENSOR: "sensor.test_humidity_sensor",
     CONF_POLL: False,
 }
 
