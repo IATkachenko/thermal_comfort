@@ -1,0 +1,19 @@
+"""General test constants."""
+from homeassistant.const import CONF_NAME
+
+from custom_components.thermal_comfort.const import (
+    CONF_HUMIDITY_SENSOR,
+    CONF_POLL,
+    CONF_TEMPERATURE_SENSOR,
+)
+from custom_components.thermal_comfort.sensor import SensorType
+
+USER_INPUT = {
+    CONF_NAME: "test_thermal_comfort",
+    CONF_TEMPERATURE_SENSOR: "test_temperature_sensor",
+    CONF_HUMIDITY_SENSOR: "test_humidity_sensor",
+    CONF_POLL: False,
+}
+
+for i in SensorType:
+    USER_INPUT[i] = True
