@@ -9,7 +9,6 @@ from homeassistant.helpers import entity_registry
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.thermal_comfort import async_update_options
 from custom_components.thermal_comfort.const import DOMAIN
 from custom_components.thermal_comfort.sensor import (
     ATTR_FROST_RISK_LEVEL,
@@ -679,13 +678,11 @@ async def test_sensor_unavailable(hass, start_ha):
         )
 
 
-@pytest.mark.parametrize("_sensor", list(SensorType))
-async def test_update_sensors(hass: HomeAssistant, _sensor: SensorType):
+async def test_create_sensors(hass: HomeAssistant):
     """Test sensors update engine.
 
     When user remove sensor in integration config, then we should remove it from system
     :param hass: HomeAssistant: Home Assistant object
-    :param _sensor: SensorType: individual sensor for test from variation
     """
 
     def get_eid(registry: entity_registry, _id):
@@ -694,27 +691,14 @@ async def test_update_sensors(hass: HomeAssistant, _sensor: SensorType):
         )
 
     er = entity_registry.async_get(hass)
-    data = USER_INPUT.copy()
-    # disable other sensors
-    for s in SensorType:
-        if s != _sensor:
-            data[s] = False
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, entry_id="test", unique_id="uniqueid"
+        domain=DOMAIN, data=USER_INPUT, entry_id="test", unique_id="uniqueid"
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     # Make sure that sensors in registry
-    assert get_eid(er, id_generator(entry.unique_id, _sensor)) is not None
-
-    # Make sure sensors removed from registry
-    data[_sensor] = False
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=data, entry_id="test", unique_id="uniqueid"
-    )
-    assert await async_update_options(hass, entry) is None
-    await hass.async_block_till_done()
-    assert get_eid(er, id_generator(entry.unique_id, _sensor)) is None
+    for s in SensorType:
+        assert get_eid(er, id_generator(entry.unique_id, s)) is not None
