@@ -15,12 +15,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
     CONF_SENSORS,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
@@ -28,13 +30,16 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 import voluptuous as vol
 
-from .const import CONF_HUMIDITY_SENSOR, CONF_POLL, CONF_TEMPERATURE_SENSOR
+from .const import CONF_HUMIDITY_SENSOR, CONF_POLL, CONF_TEMPERATURE_SENSOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -234,6 +239,63 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(sensors)
     return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up entity configured via user interface.
+
+    Called via async_setup_platforms(, SENSOR) from __init__.py
+    """
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    sensor_types: list[SensorType] = []
+    entity_registry = er.async_get(hass)
+    _LOGGER.debug(f"async_setup_entry: {data}")
+    for c in SensorType:
+        if data.get(c, False):
+            sensor_types.append(c)
+        else:
+            eid = entity_registry.async_get_entity_id(
+                domain="sensor",
+                platform=DOMAIN,
+                unique_id=id_generator(config_entry.unique_id, c),
+            )
+            if eid is not None:
+                entity_registry.async_remove(eid)
+            else:
+                _LOGGER.debug(
+                    f"async_setup_entry: should remove sensor {c}, but entity_id from registry is None"
+                )
+
+    compute_device = DeviceThermalComfort(
+        hass,
+        data[CONF_TEMPERATURE_SENSOR],
+        data[CONF_HUMIDITY_SENSOR],
+        sensor_types,
+        data[CONF_POLL],
+    )
+
+    entities: list[SensorThermalComfortEntry] = []
+    for sensor_type in sensor_types:
+        _LOGGER.debug(f"async_setup_entry: creating entity for {sensor_type}")
+        entity_description = SensorEntityDescription(**SENSOR_TYPES[sensor_type])
+        entities.append(
+            SensorThermalComfortEntry(
+                device=compute_device,
+                entity_description=entity_description,
+                hass=hass,
+                sensor_type=sensor_type,
+                device_name=data[CONF_NAME],
+                device_unique_id=f"{config_entry.unique_id}",
+            )
+        )
+    if entities:
+        async_add_entities(entities)
+        for e in entities:
+            e.async_schedule_update_ha_state(force_refresh=True)
 
 
 def id_generator(unique_id: str, sensor_type: str) -> str:
@@ -595,3 +657,39 @@ def _is_valid_state(state) -> bool:
             except ValueError:
                 pass
     return False
+
+
+class SensorThermalComfortEntry(SensorThermalComfortCommon):
+    """Sensor entry configured via user interface."""
+
+    def __init__(
+        self,
+        device: DeviceThermalComfort,
+        entity_description: SensorEntityDescription,
+        hass: HomeAssistant,
+        sensor_type: SensorType,
+        device_unique_id: ConfigEntry.unique_id,
+        device_name: str,
+    ) -> None:
+        """Initialize sensor entry configured via user interface.
+
+        :param device_unique_id: Integration unique_id for device and sensors identifiers
+        :param device_name: Integration name for device
+        """
+        super().__init__(
+            device=device,
+            entity_description=entity_description,
+            icon_template=None,
+            entity_picture_template=None,
+            sensor_type=sensor_type,
+            unique_id=device_unique_id,
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_unique_id)},
+            name=device_name,
+        )
+        self.entity_description.name = entity_description.name.format(device_name)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, f"{device_name}_{sensor_type}", hass=device.hass
+        )
+        self.hass = hass
