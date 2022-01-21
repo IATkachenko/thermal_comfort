@@ -7,14 +7,15 @@
           "temperature_sensor": "Temperature sensor",
           "humidity_sensor": "Humidity sensor",
           "poll": "Do you want the sensors to be polled? This can avoid double calculated values if your input sensors split change updates for humidity and temperature.",
-          "absolutehumidity": "Add absolute humidity sensor?",
-          "dewpoint": "Add dew point sensor?",
-          "frostpoint": "Add frost point sensor?",
-          "frostrisk": "Add frost risk sensor?",
-          "heatindex": "Add heat index sensor?",
-          "simmerindex": "Add simmer index sensor?",
-          "simmerzone": "Add simmer zone sensor?",
-          "perception": "Add perception sensor?"
+          "absolutehumidity": "Enable absolute humidity sensor by default?",
+          "dewpoint": "Enable dew point sensor by default?",
+          "frostpoint": "Enable frost point sensor by default?",
+          "frostrisk": "Enable frost risk sensor by default?",
+          "heatindex": "Enable heat index sensor by default?",
+          "simmerindex": "Enable simmer index sensor by default?",
+          "simmerzone": "Enable simmer zone sensor by default?",
+          "perception": "Enable perception sensor by default?",
+          "show_advanced_options": "Advanced options"
         }
       }
     }
@@ -31,14 +32,15 @@
           "temperature_sensor": "Temperature sensor",
           "humidity_sensor": "Humidity sensor",
           "poll": "Do you want the sensors to be polled? This can avoid double calculated values if your input sensors split change updates for humidity and temperature.",
-          "absolutehumidity": "Add absolute humidity sensor?",
-          "dewpoint": "Add dew point sensor?",
-          "frostpoint": "Add frost point sensor?",
-          "frostrisk": "Add frost risk sensor?",
-          "heatindex": "Add heat index sensor?",
-          "simmerindex": "Add simmer index sensor?",
-          "simmerzone": "Add simmer zone sensor?",
-          "perception": "Add perception sensor?"
+          "absolutehumidity": "Enable absolute humidity sensor by default?",
+          "dewpoint": "Enable dew point sensor by default?",
+          "frostpoint": "Enable frost point sensor by default?",
+          "frostrisk": "Enable frost risk sensor by default?",
+          "heatindex": "Enable heat index sensor by default?",
+          "simmerindex": "Enable simmer index sensor by default?",
+          "simmerzone": "Enable simmer zone sensor by default?",
+          "perception": "Enable perception sensor by default?",
+          "show_advanced_options": "Advanced options"
         }
       }
     }
