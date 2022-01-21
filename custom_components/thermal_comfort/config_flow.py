@@ -37,10 +37,13 @@ def get_value(
         return default
 
 
-def build_schema(config_entry: config_entries | None) -> vol.Schema:
+def build_schema(
+    config_entry: config_entries | None, show_advanced: bool = False
+) -> vol.Schema:
     """Build configuration schema.
 
     :param config_entry: config entry for getting current parameters on None
+    :param show_advanced: bool: should we show advanced options?
     :return: Configuration schema with default parameters
     """
     # ToDo: get list of CONF_TEMPERATURE_SENSOR and CONF_HUMIDITY_SENSOR to create dropdown list and "one of" selection
@@ -57,20 +60,24 @@ def build_schema(config_entry: config_entries | None) -> vol.Schema:
                 CONF_HUMIDITY_SENSOR,
                 default=get_value(config_entry, CONF_HUMIDITY_SENSOR),
             ): str,
-            vol.Optional(
-                CONF_POLL, default=get_value(config_entry, CONF_POLL, False)
-            ): bool,
         }
     )
-
-    for st in SensorType:
+    if show_advanced:
         schema = schema.extend(
             {
                 vol.Optional(
-                    str(st), default=get_value(config_entry, str(st), True)
-                ): bool
+                    CONF_POLL, default=get_value(config_entry, CONF_POLL, False)
+                ): bool,
             }
         )
+        for st in SensorType:
+            schema = schema.extend(
+                {
+                    vol.Optional(
+                        str(st), default=get_value(config_entry, str(st), True)
+                    ): bool
+                }
+            )
 
     return schema
 
@@ -112,7 +119,9 @@ class ThermalComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=build_schema(None), errors=errors
+            step_id="user",
+            data_schema=build_schema(None, self.show_advanced_options),
+            errors=errors,
         )
 
 
@@ -131,5 +140,5 @@ class ThermalComfortOptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=build_schema(self.config_entry),
+            data_schema=build_schema(self.config_entry, self.show_advanced_options),
         )
