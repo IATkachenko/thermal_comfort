@@ -1,0 +1,46 @@
+{
+  "options": {
+    "step": {
+      "init": {
+        "title": "Thermal comfort settings",
+        "data": {
+          "temperature_sensor": "Temperature sensor",
+          "humidity_sensor": "Humidity sensor",
+          "poll": "Do you want the sensors to be polled? This can avoid double calculated values if your input sensors split change updates for humidity and temperature.",
+          "absolutehumidity": "Add absolute humidity sensor?",
+          "dewpoint": "Add dew point sensor?",
+          "frostpoint": "Add frost point sensor?",
+          "frostrisk": "Add frost risk sensor?",
+          "heatindex": "Add heat index sensor?",
+          "simmerindex": "Add simmer index sensor?",
+          "simmerzone": "Add simmer zone sensor?",
+          "perception": "Add perception sensor?"
+        }
+      }
+    }
+  },
+  "config": {
+    "abort": {
+      "already_configured": "This combination of temperature and humidity sensors is already configured"
+    },
+    "step": {
+      "user": {
+        "title": "Thermal comfort settings",
+        "data": {
+          "name": "Name",
+          "temperature_sensor": "Temperature sensor",
+          "humidity_sensor": "Humidity sensor",
+          "poll": "Do you want the sensors to be polled? This can avoid double calculated values if your input sensors split change updates for humidity and temperature.",
+          "absolutehumidity": "Add absolute humidity sensor?",
+          "dewpoint": "Add dew point sensor?",
+          "frostpoint": "Add frost point sensor?",
+          "frostrisk": "Add frost risk sensor?",
+          "heatindex": "Add heat index sensor?",
+          "simmerindex": "Add simmer index sensor?",
+          "simmerzone": "Add simmer zone sensor?",
+          "perception": "Add perception sensor?"
+        }
+      }
+    }
+  }
+}
