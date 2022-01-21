@@ -32,7 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -251,37 +250,31 @@ async def async_setup_entry(
     Called via async_setup_platforms(, SENSOR) from __init__.py
     """
     data = hass.data[DOMAIN][config_entry.entry_id]
-    sensor_types: list[SensorType] = []
-    entity_registry = er.async_get(hass)
+    enabled_sensor_types: list[SensorType] = []
     _LOGGER.debug(f"async_setup_entry: {data}")
     for c in SensorType:
         if data.get(c, False):
-            sensor_types.append(c)
-        else:
-            eid = entity_registry.async_get_entity_id(
-                domain="sensor",
-                platform=DOMAIN,
-                unique_id=id_generator(config_entry.unique_id, c),
-            )
-            if eid is not None:
-                entity_registry.async_remove(eid)
-            else:
-                _LOGGER.debug(
-                    f"async_setup_entry: should remove sensor {c}, but entity_id from registry is None"
-                )
+            enabled_sensor_types.append(c)
 
     compute_device = DeviceThermalComfort(
         hass,
         data[CONF_TEMPERATURE_SENSOR],
         data[CONF_HUMIDITY_SENSOR],
-        sensor_types,
+        SENSOR_TYPES,
         data[CONF_POLL],
     )
 
     entities: list[SensorThermalComfortEntry] = []
-    for sensor_type in sensor_types:
-        _LOGGER.debug(f"async_setup_entry: creating entity for {sensor_type}")
+    for sensor_type in SENSOR_TYPES:
         entity_description = SensorEntityDescription(**SENSOR_TYPES[sensor_type])
+        entity_description.entity_registry_enabled_default = (
+            True if sensor_type in enabled_sensor_types else False
+        )
+
+        _LOGGER.debug(
+            f"async_setup_entry: setting up entity for {sensor_type},"
+            f"enabled_default = {entity_description.entity_registry_enabled_default}"
+        )
         entities.append(
             SensorThermalComfortEntry(
                 device=compute_device,
