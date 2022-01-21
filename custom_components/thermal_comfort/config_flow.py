@@ -16,7 +16,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from .sensor import SensorType
+from .sensor import DEFAULT_SENSOR_TYPES, SensorType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,10 +71,12 @@ def build_schema(
             }
         )
         for st in SensorType:
+            default_enable = st in DEFAULT_SENSOR_TYPES
             schema = schema.extend(
                 {
                     vol.Optional(
-                        str(st), default=get_value(config_entry, str(st), True)
+                        str(st),
+                        default=get_value(config_entry, str(st), default_enable),
                     ): bool
                 }
             )
