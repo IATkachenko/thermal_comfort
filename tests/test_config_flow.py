@@ -23,9 +23,13 @@ def bypass_setup_fixture():
         yield
 
 
-async def _flow_init(hass):
+async def _flow_init(hass, advanced_options=True):
     return await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_USER,
+            "show_advanced_options": advanced_options,
+        },
     )
 
 
@@ -76,7 +80,9 @@ async def test_options_flow(hass):
     entry.add_to_hass(hass)
 
     # Initialize an options flow for entry
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"show_advanced_options": True}
+    )
 
     # Verify that the first options step is a user form
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
