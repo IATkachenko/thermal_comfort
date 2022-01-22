@@ -30,6 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_HUMIDITY_SENSOR: get_value(entry, CONF_HUMIDITY_SENSOR),
         CONF_POLL: get_value(entry, CONF_POLL),
     }
+    if entry.unique_id is None:
+        # We have no unique_id yet, let's use backup.
+        hass.config_entries.async_update_entry(entry, unique_id=entry.entry_id)
+
     for st in SensorType:
         hass.data[DOMAIN][entry.entry_id][st] = get_value(entry, st)
 

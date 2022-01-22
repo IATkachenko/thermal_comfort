@@ -5,7 +5,7 @@ import logging
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 import voluptuous as vol
 
@@ -86,6 +86,33 @@ def build_schema(
     return schema
 
 
+def check_input(hass: HomeAssistant, user_input: dict) -> dict:
+    """Check that we may use suggested configuration.
+
+    :param hass: hass instance
+    :param user_input: user input
+    :returns: dict with error.
+    """
+
+    # ToDo: user_input have ConfigType type, but it in codebase since 2021.12.10
+
+    result = {}
+
+    t_sensor = hass.states.get(user_input[CONF_TEMPERATURE_SENSOR])
+    p_sensor = hass.states.get(user_input[CONF_HUMIDITY_SENSOR])
+
+    if t_sensor is None:
+        result["base"] = "temperature_not_found"
+
+    if p_sensor is None:
+        result["base"] = "humidity_not_found"
+
+    # ToDo: we should not trust user and check:
+    #  - that CONF_TEMPERATURE_SENSOR is temperature sensor and have state_class measurement
+    #  - that CONF_HUMIDITY_SENSOR is humidity sensor and have state_class measurement
+    return result
+
+
 class ThermalComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Configuration flow for setting up new thermal_comfort entry."""
 
@@ -100,27 +127,22 @@ class ThermalComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            er = entity_registry.async_get(self.hass)
+            if not (errors := check_input(self.hass, user_input)):
+                er = entity_registry.async_get(self.hass)
 
-            t_sensor = er.async_get(user_input[CONF_TEMPERATURE_SENSOR])
-            p_sensor = er.async_get(user_input[CONF_HUMIDITY_SENSOR])
-            _LOGGER.debug(f"Going to use t_sensor {t_sensor}")
-            _LOGGER.debug(f"Going to use p_sensor {p_sensor}")
+                t_sensor = er.async_get(user_input[CONF_TEMPERATURE_SENSOR])
+                p_sensor = er.async_get(user_input[CONF_HUMIDITY_SENSOR])
+                _LOGGER.debug(f"Going to use t_sensor {t_sensor}")
+                _LOGGER.debug(f"Going to use p_sensor {p_sensor}")
 
-            if t_sensor is None:
-                self.async_abort(reason="Temperature sensor not found")
+                if t_sensor is not None and p_sensor is not None:
+                    unique_id = f"{t_sensor.unique_id}-{p_sensor.unique_id}"
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
 
-            if p_sensor is None:
-                self.async_abort(reason="Pressure sensor not found")
-
-            await self.async_set_unique_id(f"{t_sensor.unique_id}-{p_sensor.unique_id}")
-            self._abort_if_unique_id_configured()
-
-            # ToDo: we should not trust user and check:
-            #  - that t_sensor is temperature sensor and have state_class measurement
-            #  - that p_sensor is humidity sensor and have state_class measurement
-
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -138,11 +160,17 @@ class ThermalComfortOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
+
+        errors = {}
         if user_input is not None:
-            _LOGGER.debug(f"OptionsFlow: configuration updated {user_input}")
-            return self.async_create_entry(title="", data=user_input)
+            _LOGGER.debug(f"OptionsFlow: going to update configuration {user_input}")
+            if not (errors := check_input(self.hass, user_input)):
+                return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=build_schema(self.config_entry, self.show_advanced_options, "init"),
+            data_schema=build_schema(
+                self.config_entry, self.show_advanced_options, "init"
+            ),
+            errors=errors,
         )

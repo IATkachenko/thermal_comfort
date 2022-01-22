@@ -1,5 +1,9 @@
 {
   "options": {
+    "error": {
+      "temperature_not_found": "Temperature sensor not found",
+      "humidity_not_found": "Humidity sensor not found"
+    },
     "step": {
       "init": {
         "title": "Thermal comfort settings",
@@ -14,6 +18,10 @@
   "config": {
     "abort": {
       "already_configured": "This combination of temperature and humidity sensors is already configured"
+    },
+    "error": {
+      "temperature_not_found": "Temperature sensor not found",
+      "humidity_not_found": "Humidity sensor not found"
     },
     "step": {
       "user": {
