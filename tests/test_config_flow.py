@@ -8,9 +8,8 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.thermal_comfort.const import DOMAIN
-from custom_components.thermal_comfort.sensor import SensorType
 
-from .const import USER_INPUT
+from .const import USER_INPUT, USER_NEW_INPUT
 
 
 @pytest.fixture(autouse=True)
@@ -89,13 +88,9 @@ async def test_options_flow(hass):
     assert result["step_id"] == "init"
 
     # Enter some data into the form
-    new_input = {}
-    for s in SensorType:
-        new_input[s] = not USER_INPUT[s]
-
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=new_input,
+        user_input=USER_NEW_INPUT,
     )
 
     # Verify that the flow finishes
@@ -103,7 +98,8 @@ async def test_options_flow(hass):
     assert result["title"] == ""
 
     # Verify that the options were updated
-    assert entry.options == {**USER_INPUT, **new_input}
+
+    assert entry.options == USER_NEW_INPUT
 
 
 async def test_config_flow_enabled():

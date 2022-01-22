@@ -15,5 +15,8 @@ USER_INPUT = {
     CONF_POLL: False,
 }
 
+USER_NEW_INPUT = dict(USER_INPUT)
+USER_NEW_INPUT[CONF_NAME] = "New name"
+
 for i in SensorType:
     USER_INPUT[i] = True
