@@ -38,12 +38,13 @@ def get_value(
 
 
 def build_schema(
-    config_entry: config_entries | None, show_advanced: bool = False
+    config_entry: config_entries | None, show_advanced: bool = False, step: str = "user"
 ) -> vol.Schema:
     """Build configuration schema.
 
     :param config_entry: config entry for getting current parameters on None
     :param show_advanced: bool: should we show advanced options?
+    :param step: for which step we should build schema
     :return: Configuration schema with default parameters
     """
     # ToDo: get list of CONF_TEMPERATURE_SENSOR and CONF_HUMIDITY_SENSOR to create dropdown list and "one of" selection
@@ -70,16 +71,17 @@ def build_schema(
                 ): bool,
             }
         )
-        for st in SensorType:
-            default_enable = st in DEFAULT_SENSOR_TYPES
-            schema = schema.extend(
-                {
-                    vol.Optional(
-                        str(st),
-                        default=get_value(config_entry, str(st), default_enable),
-                    ): bool
-                }
-            )
+        if step == "user":
+            for st in SensorType:
+                default_enable = st in DEFAULT_SENSOR_TYPES
+                schema = schema.extend(
+                    {
+                        vol.Optional(
+                            str(st),
+                            default=get_value(config_entry, str(st), default_enable),
+                        ): bool
+                    }
+                )
 
     return schema
 
@@ -142,5 +144,5 @@ class ThermalComfortOptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=build_schema(self.config_entry, self.show_advanced_options),
+            data_schema=build_schema(self.config_entry, self.show_advanced_options, "init"),
         )
