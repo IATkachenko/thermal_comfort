@@ -1,5 +1,5 @@
 """Test setup process."""
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -15,10 +15,14 @@ from .const import USER_INPUT
 
 async def test_setup_update_unload_entry(hass):
     """Test entry setup and unload."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, entry_id="test")
-    hass.config_entries.async_setup_platforms = MagicMock()
 
-    await hass.config_entries.async_add(config_entry)
+    hass.config_entries.async_setup_platforms = MagicMock()
+    with patch.object(hass.config_entries, "async_update_entry") as p:
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=USER_INPUT, entry_id="test", unique_id=None
+        )
+        await hass.config_entries.async_add(config_entry)
+        assert p.called
 
     assert await async_setup_entry(hass, config_entry)
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
