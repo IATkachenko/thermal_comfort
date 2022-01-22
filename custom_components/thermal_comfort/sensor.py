@@ -287,8 +287,6 @@ async def async_setup_entry(
         )
     if entities:
         async_add_entities(entities)
-        for e in entities:
-            e.async_schedule_update_ha_state(force_refresh=True)
 
 
 def id_generator(unique_id: str, sensor_type: str) -> str:
@@ -341,6 +339,8 @@ class SensorThermalComfortCommon(SensorEntity):
             self._icon_template.hass = self.hass
         if self._entity_picture_template is not None:
             self._entity_picture_template.hass = self.hass
+        if self._device.compute_states[self._sensor_type].needs_update:
+            self.async_schedule_update_ha_state(True)
 
     async def async_update(self):
         """Update the state of the sensor."""
@@ -417,7 +417,7 @@ class SensorThermalComfort(SensorThermalComfortCommon):
 class ComputeState:
     """Thermal Comfort Calculation State."""
 
-    needs_update: bool = True
+    needs_update: bool = False
     lock: Lock = None
 
 
@@ -640,6 +640,11 @@ class DeviceThermalComfort:
             if not self.should_poll:
                 for sensor in self.sensors:
                     sensor.async_schedule_update_ha_state(True)
+
+    @property
+    def compute_states(self) -> dict[SensorType, ComputeState]:
+        """Compute states of configured sensors."""
+        return self._compute_states
 
 
 def _is_valid_state(state) -> bool:
