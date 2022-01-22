@@ -10,6 +10,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.thermal_comfort.const import DOMAIN
 
 from .const import USER_INPUT, USER_NEW_INPUT
+from .test_sensor import DEFAULT_TEST_SENSORS
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +43,8 @@ async def _flow_configure(hass, r, _input=USER_INPUT):
         )
 
 
-async def test_successful_config_flow(hass):
+@pytest.mark.parametrize("domains", DEFAULT_TEST_SENSORS)
+async def test_successful_config_flow(hass, start_ha):
     """Test a successful config flow."""
     # Initialize a config flow
     result = await _flow_init(hass)
@@ -60,7 +62,8 @@ async def test_successful_config_flow(hass):
     assert result["result"]
 
 
-async def test_failed_config_flow(hass):
+@pytest.mark.parametrize("domains", DEFAULT_TEST_SENSORS)
+async def test_failed_config_flow(hass, start_ha):
     """Config flow should fail if ..."""
 
     # We try to set up second instance for same temperature and humidity sensors
@@ -72,7 +75,8 @@ async def test_failed_config_flow(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass):
+@pytest.mark.parametrize("domains", DEFAULT_TEST_SENSORS)
+async def test_options_flow(hass, start_ha):
     """Test flow for options changes."""
     # setup entry
     entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, entry_id="test")
